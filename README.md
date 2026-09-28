@@ -39,14 +39,15 @@
 
 ## 2. 설치
 
-### Windows
+### Windows — 👉 단계별 가이드: [`docs/INSTALL_WINDOWS.md`](docs/INSTALL_WINDOWS.md)
 ```powershell
-git clone <이 저장소> localapi; cd localapi
-powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1            # 2GB VRAM이면 -Model qwen3.5:2b
+git clone https://github.com/escapebaek/localapi.git; cd localapi
+powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1            # Python·Ollama·모델·.env 자동 설정
 # 트레이의 Ollama 아이콘 → Quit 후 다시 실행 (OLLAMA_HOST 설정 적용)
-scripts\start_windows.bat
+scripts\start_windows.bat                                                    # 게이트웨이 실행
+powershell -ExecutionPolicy Bypass -File scripts\test_api.ps1                # (새 창) 동작·속도 확인
+powershell -ExecutionPolicy Bypass -File scripts\autostart_windows.ps1       # (관리자) 로그인 시 자동 시작
 ```
-Python 3.10+ 가 필요합니다 (`winget install Python.Python.3.12`).
 
 ### Linux (Ubuntu 등)
 ```bash
@@ -133,7 +134,7 @@ curl http://127.0.0.1:8000/v1/generate \
 ## 6. 항상 켜두기 (노트북)
 
 - **절전 해제**: Windows 설정 → 전원 → 화면/절전 "안 함", 덮개 닫을 때 "아무 것도 안 함" (Linux: `/etc/systemd/logind.conf` 의 `HandleLidSwitch=ignore`)
-- **Windows 자동 시작**: 작업 스케줄러 → 기본 작업 만들기 → 트리거 "로그온할 때" → `scripts\start_windows.bat` 실행. Ollama는 설치 시 자동 시작에 등록됩니다.
+- **Windows 자동 시작**: 관리자 PowerShell에서 `scripts\autostart_windows.ps1` → 로그인 시 창 없이 게이트웨이 실행(로그: `logs\gateway.log`). Ollama는 설치 시 자동 시작에 등록됩니다.
 - 배터리 상시 충전은 배터리 부풀음 위험이 있으니, 제조사 유틸의 "충전 한도(60~80%)" 기능이 있다면 켜두세요.
 
 ## 7. 프라이버시 체크리스트
