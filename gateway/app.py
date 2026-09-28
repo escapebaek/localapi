@@ -50,6 +50,9 @@ class Settings:
     allowed_models: list[str] = field(default_factory=list)
     api_keys: list[str] = field(default_factory=list)
     allow_no_auth: bool = False
+    # Swagger UI at /docs. Off by default: with Tailscale Funnel the
+    # gateway is on the public internet and needn't advertise its API.
+    enable_docs: bool = False
     cors_origins: list[str] = field(default_factory=list)
     # An old GPU runs one generation at a time; extra requests wait their turn.
     max_concurrent: int = 1
@@ -76,6 +79,7 @@ class Settings:
             allowed_models=_csv(env("ALLOWED_MODELS", "")),
             api_keys=_csv(env("API_KEYS", "")),
             allow_no_auth=env("ALLOW_NO_AUTH", "false").lower() == "true",
+            enable_docs=env("ENABLE_DOCS", "false").lower() == "true",
             cors_origins=_csv(env("CORS_ORIGINS", "")),
             max_concurrent=int(env("MAX_CONCURRENT", "1")),
             request_timeout=float(env("REQUEST_TIMEOUT", "600")),
@@ -326,7 +330,8 @@ def create_app(settings: Settings | None = None, transport: httpx.AsyncBaseTrans
             app.state.engine = Engine(settings, client)
             yield
 
-    app = FastAPI(title="Local AI API", version="1.0.0", lifespan=lifespan)
+    docs = {} if settings.enable_docs else {"docs_url": None, "redoc_url": None, "openapi_url": None}
+    app = FastAPI(title="Local AI API", version="1.0.0", lifespan=lifespan, **docs)
     if settings.cors_origins:
         app.add_middleware(
             CORSMiddleware,

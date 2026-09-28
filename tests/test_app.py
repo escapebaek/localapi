@@ -62,6 +62,11 @@ def test_refuses_to_start_without_keys():
         create_app(Settings())
 
 
+def test_docs_disabled_by_default(client):
+    assert client.get("/docs").status_code == 404
+    assert client.get("/openapi.json").status_code == 404
+
+
 def test_health_is_public(client):
     assert client.get("/health").json() == {"status": "ok", "ollama": True}
 

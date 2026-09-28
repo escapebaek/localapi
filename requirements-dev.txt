@@ -1,2 +1,5 @@
 -r requirements.txt
 pytest>=8
+# for tests/test_django_example.py
+django>=4.2
+requests>=2.31
