@@ -40,6 +40,9 @@ class FakeOllama:
                     "done_reason": "stop",
                     "prompt_eval_count": 10,
                     "eval_count": 5,
+                    "load_duration": 2_000_000_000,
+                    "prompt_eval_duration": 500_000_000,
+                    "eval_duration": 1_000_000_000,
                 },
             )
         return httpx.Response(404)
@@ -86,6 +89,7 @@ def test_generate(client, fake):
     body = r.json()
     assert body["response"] == "echo: hi"
     assert body["completion_tokens"] == 5
+    assert (body["load_ms"], body["prompt_eval_ms"], body["eval_ms"]) == (2000, 500, 1000)
     sent = fake.last_body
     assert sent["model"] == "qwen3.5:4b"
     assert sent["messages"][0] == {"role": "system", "content": "be brief"}

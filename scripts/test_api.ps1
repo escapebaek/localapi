@@ -1,6 +1,6 @@
 # Smoke test: health check + one real generation through the gateway.
-#   powershell -ExecutionPolicy Bypass -File scripts\test_api.ps1 [-Url http://127.0.0.1:8000]
-param([string]$Url = "http://127.0.0.1:8000")
+#   powershell -ExecutionPolicy Bypass -File scripts\test_api.ps1 [-Url http://127.0.0.1:8000] [-Model qwen3.5:2b]
+param([string]$Url = "http://127.0.0.1:8000", [string]$Model = "")
 $ErrorActionPreference = "Stop"
 Set-Location (Split-Path $PSScriptRoot -Parent)
 
@@ -26,9 +26,17 @@ Write-Host "== /v1/models"
 (Invoke-Api GET "/v1/models").data | Format-Table id, installed
 
 Write-Host "== /v1/generate (first call loads the model; may take 10-60s longer)"
-$out = Invoke-Api POST "/v1/generate" @{
+$body = @{
     system = "Answer in Korean."
-    prompt = "Introduce yourself in two short sentences."
+    prompt = "Explain in about five sentences what general anesthesia is."
 }
+if ($Model) { $body.model = $Model }
+$out = Invoke-Api POST "/v1/generate" $body
 Write-Host $out.response
-Write-Host ("-- {0} ms, {1} output tokens, {2:N1} tok/s" -f $out.duration_ms, $out.completion_tokens, ($out.completion_tokens / [Math]::Max($out.duration_ms / 1000, 0.001)))
+Write-Host ""
+Write-Host ("model            : {0}" -f $out.model)
+Write-Host ("total            : {0:N1} s" -f ($out.duration_ms / 1000))
+Write-Host ("  model load     : {0:N1} s   (0 when already loaded)" -f ($out.load_ms / 1000))
+Write-Host ("  read prompt    : {0:N1} s   ({1} tokens)" -f ($out.prompt_eval_ms / 1000), $out.prompt_tokens)
+Write-Host ("  generate       : {0:N1} s   ({1} tokens)" -f ($out.eval_ms / 1000), $out.completion_tokens)
+Write-Host ("GENERATION SPEED : {0:N1} tok/s  <- use this number" -f ($out.completion_tokens / [Math]::Max($out.eval_ms / 1000, 0.001)))

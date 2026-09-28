@@ -234,6 +234,11 @@ class Engine:
             "prompt_tokens": data.get("prompt_eval_count"),
             "completion_tokens": data.get("eval_count"),
             "duration_ms": elapsed_ms,
+            # Ollama's own breakdown (ns -> ms): model load, reading the prompt,
+            # generating. Generation speed = completion_tokens / eval_ms.
+            "load_ms": _ns_to_ms(data.get("load_duration")),
+            "prompt_eval_ms": _ns_to_ms(data.get("prompt_eval_duration")),
+            "eval_ms": _ns_to_ms(data.get("eval_duration")),
         }
 
     async def chat_stream(self, body: dict[str, Any]) -> AsyncIterator[dict[str, Any]]:
@@ -290,6 +295,10 @@ class Engine:
         if job is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "job not found")
         return job
+
+
+def _ns_to_ms(value: Any) -> int | None:
+    return int(value) // 1_000_000 if isinstance(value, (int, float)) else None
 
 
 def _ollama_error(resp: httpx.Response) -> str:
