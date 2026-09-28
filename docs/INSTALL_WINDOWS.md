@@ -63,11 +63,18 @@ powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1
 작업 표시줄 오른쪽 트레이의 **Ollama(라마) 아이콘 우클릭 → Quit Ollama** → 시작 메뉴에서 **Ollama** 다시 실행.
 (3단계의 환경변수를 적용하기 위함)
 
+> Ollama를 실행했을 때 "터미널에서 `ollama`를 입력하세요" 같은 안내 창이나 채팅 창이 떠도 **추가로 설치할 것은 없습니다.** 창은 닫아도 되고, 트레이에 아이콘만 떠 있으면 백그라운드 서버가 동작 중입니다.
+> 확인: PowerShell에서 `ollama list` → 목록에 `qwen3.5:4b` 가 보이면 정상.
+
 ## 5. 게이트웨이 실행
 
+PowerShell에서 **`localapi` 폴더로 이동한 뒤** 실행합니다. PowerShell은 현재 폴더의 파일을 실행할 때 앞에 `.\` 를 붙여야 합니다.
 ```powershell
-scripts\start_windows.bat
+cd $HOME\localapi
+.\scripts\start_windows.bat
 ```
+(탐색기에서 `scripts\start_windows.bat` 을 더블클릭해도 됩니다.)
+
 `Uvicorn running on http://127.0.0.1:8000` 이 보이면 성공입니다. 이 창은 켜 둔 채로 다음 단계를 진행하세요.
 
 ## 6. 동작 테스트
@@ -153,5 +160,6 @@ powershell -ExecutionPolicy Bypass -File scripts\autostart_windows.ps1
 | `400 model ... is not allowed` | 요청의 `model` 값이 `DEFAULT_MODEL`/`ALLOWED_MODELS` 에 없음 |
 | `502 Ollama error: model ... not found` | `ollama pull qwen3.5:4b` 실행 |
 | `504 model timed out` | 응답이 10분 초과 → `max_tokens` 줄이기, 2b 모델, 또는 `/v1/jobs` 사용 |
+| `CUDA error: the provided PTX was compiled with an unsupported toolchain` | NVIDIA 드라이버가 Ollama의 CUDA 버전보다 오래됨 → GTX 960용 최신 드라이버 설치 후 재부팅. 그래도 안 되면 `.env` 에 `NUM_GPU=0` (CPU 전용) 후 게이트웨이 재시작 |
 | `ollama ps` 가 `100% CPU` | NVIDIA 드라이버 재설치 후 재부팅. 그래도 안 되면 구형 GPU 미지원일 수 있음(CPU로 계속 사용 가능) |
 | 스크립트 실행이 막힘 (`running scripts is disabled`) | 명령 앞에 `powershell -ExecutionPolicy Bypass -File` 을 붙여서 실행 |

@@ -76,5 +76,5 @@ if (-not (Test-Path .env)) {
 Write-Host ""
 Write-Host "Done! Next:"
 Write-Host "  1) Quit Ollama from the tray icon and start it again (applies OLLAMA_HOST)."
-Write-Host "  2) Start the gateway:   scripts\start_windows.bat"
+Write-Host "  2) Start the gateway:   .\scripts\start_windows.bat"
 Write-Host "  3) Test (new window):   powershell -ExecutionPolicy Bypass -File scripts\test_api.ps1"

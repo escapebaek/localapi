@@ -55,6 +55,9 @@ class Settings:
     max_concurrent: int = 1
     request_timeout: float = 600.0
     num_ctx: int = 4096
+    # Layers to offload to the GPU. None = Ollama decides; 0 = CPU only
+    # (for GPUs/drivers Ollama's CUDA build can't use).
+    num_gpu: int | None = None
     keep_alive: str = "30m"
     # Qwen3/3.5 "thinking" often multiplies latency; off unless asked for.
     # None leaves the model's own default (use for models without thinking).
@@ -77,6 +80,7 @@ class Settings:
             max_concurrent=int(env("MAX_CONCURRENT", "1")),
             request_timeout=float(env("REQUEST_TIMEOUT", "600")),
             num_ctx=int(env("NUM_CTX", "4096")),
+            num_gpu=int(env("NUM_GPU")) if env("NUM_GPU", "").strip() else None,
             keep_alive=env("KEEP_ALIVE", "30m"),
             default_think=_optional_bool(env("DEFAULT_THINK", "false")),
             max_input_chars=int(env("MAX_INPUT_CHARS", "32000")),
@@ -181,6 +185,8 @@ class Engine:
             "num_ctx": s.num_ctx,
             "num_predict": min(opts.max_tokens or s.max_output_tokens, s.max_output_tokens),
         }
+        if s.num_gpu is not None:
+            options["num_gpu"] = s.num_gpu
         if opts.temperature is not None:
             options["temperature"] = opts.temperature
         body: dict[str, Any] = {

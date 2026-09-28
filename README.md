@@ -44,7 +44,7 @@
 git clone https://github.com/escapebaek/localapi.git; cd localapi
 powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1            # Python·Ollama·모델·.env 자동 설정
 # 트레이의 Ollama 아이콘 → Quit 후 다시 실행 (OLLAMA_HOST 설정 적용)
-scripts\start_windows.bat                                                    # 게이트웨이 실행
+.\scripts\start_windows.bat                                                  # 게이트웨이 실행
 powershell -ExecutionPolicy Bypass -File scripts\test_api.ps1                # (새 창) 동작·속도 확인
 powershell -ExecutionPolicy Bypass -File scripts\autostart_windows.ps1       # (관리자) 로그인 시 자동 시작
 ```

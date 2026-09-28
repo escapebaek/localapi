@@ -88,6 +88,16 @@ def test_generate(client, fake):
     assert sent["options"]["num_ctx"] == 4096
 
 
+def test_num_gpu_only_sent_when_set(client, fake):
+    client.post("/v1/generate", json={"prompt": "hi"}, headers=H)
+    assert "num_gpu" not in fake.last_body["options"]
+
+    settings = Settings(api_keys=[KEY], num_gpu=0)
+    with TestClient(create_app(settings, transport=httpx.MockTransport(fake))) as c:
+        c.post("/v1/generate", json={"prompt": "hi"}, headers=H)
+    assert fake.last_body["options"]["num_gpu"] == 0
+
+
 def test_think_and_format_passthrough(client, fake):
     client.post("/v1/generate", json={"prompt": "hi", "think": True, "format": "json", "max_tokens": 99999}, headers=H)
     assert fake.last_body["think"] is True
