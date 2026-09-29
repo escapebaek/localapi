@@ -40,6 +40,9 @@ class FakeOllama:
                     "done_reason": "stop",
                     "prompt_eval_count": 10,
                     "eval_count": 5,
+                    "load_duration": 2_000_000_000,
+                    "prompt_eval_duration": 500_000_000,
+                    "eval_duration": 1_000_000_000,
                 },
             )
         return httpx.Response(404)
@@ -62,6 +65,11 @@ def test_refuses_to_start_without_keys():
         create_app(Settings())
 
 
+def test_docs_disabled_by_default(client):
+    assert client.get("/docs").status_code == 404
+    assert client.get("/openapi.json").status_code == 404
+
+
 def test_health_is_public(client):
     assert client.get("/health").json() == {"status": "ok", "ollama": True}
 
@@ -81,11 +89,22 @@ def test_generate(client, fake):
     body = r.json()
     assert body["response"] == "echo: hi"
     assert body["completion_tokens"] == 5
+    assert (body["load_ms"], body["prompt_eval_ms"], body["eval_ms"]) == (2000, 500, 1000)
     sent = fake.last_body
     assert sent["model"] == "qwen3.5:4b"
     assert sent["messages"][0] == {"role": "system", "content": "be brief"}
     assert sent["think"] is False
     assert sent["options"]["num_ctx"] == 4096
+
+
+def test_num_gpu_only_sent_when_set(client, fake):
+    client.post("/v1/generate", json={"prompt": "hi"}, headers=H)
+    assert "num_gpu" not in fake.last_body["options"]
+
+    settings = Settings(api_keys=[KEY], num_gpu=0)
+    with TestClient(create_app(settings, transport=httpx.MockTransport(fake))) as c:
+        c.post("/v1/generate", json={"prompt": "hi"}, headers=H)
+    assert fake.last_body["options"]["num_gpu"] == 0
 
 
 def test_think_and_format_passthrough(client, fake):

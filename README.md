@@ -44,7 +44,7 @@
 git clone https://github.com/escapebaek/localapi.git; cd localapi
 powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1            # Python·Ollama·모델·.env 자동 설정
 # 트레이의 Ollama 아이콘 → Quit 후 다시 실행 (OLLAMA_HOST 설정 적용)
-scripts\start_windows.bat                                                    # 게이트웨이 실행
+.\scripts\start_windows.bat                                                  # 게이트웨이 실행
 powershell -ExecutionPolicy Bypass -File scripts\test_api.ps1                # (새 창) 동작·속도 확인
 powershell -ExecutionPolicy Bypass -File scripts\autostart_windows.ps1       # (관리자) 로그인 시 자동 시작
 ```
@@ -65,12 +65,16 @@ curl http://127.0.0.1:8000/v1/generate \
 ```
 첫 요청은 모델을 메모리에 올리느라 10~30초 더 걸립니다. 이후 `KEEP_ALIVE`(30분) 동안은 바로 응답합니다.
 
-## 3. 다른 기기에서 호출하기 (권장: Tailscale)
+## 3. 다른 기기에서 호출하기 (Tailscale)
 
-게이트웨이는 기본적으로 `127.0.0.1`(노트북 자신)에서만 열립니다. 다른 기기에서 쓰려면:
+게이트웨이는 기본적으로 `127.0.0.1`(노트북 자신)에서만 열립니다. 다른 기기에서 쓰려면 둘 중 하나를 고릅니다.
 
-**권장 — [Tailscale](https://tailscale.com) (무료 개인용)**
-1. 노트북과 호출할 기기(내 PC, 폰, 내 웹서버 등)에 Tailscale 설치 후 같은 계정으로 로그인
+**A. 웹 서비스(Render의 Django 등)에서 호출 — Tailscale Funnel** 👉 [`docs/TAILSCALE_FUNNEL.md`](docs/TAILSCALE_FUNNEL.md)
+- 노트북에 `https://localai.xxx.ts.net` 같은 HTTPS 공개 주소를 만들어 줍니다. Render 쪽엔 설치할 것이 없습니다.
+- Django 연동 코드(비동기 job + 프론트 폴링): [`examples/django/`](examples/django/README.md)
+
+**B. 내 기기끼리만 — Tailscale 사설망** (인터넷에 공개하지 않음)
+1. 노트북과 호출할 기기(내 PC, 폰 등)에 Tailscale 설치 후 같은 계정으로 로그인
 2. 노트북의 Tailscale IP 확인(`tailscale ip -4`, `100.x.y.z`)
 3. `.env` 에서 `HOST=100.x.y.z` 로 바꾸고 게이트웨이 재시작
 4. 다른 기기에서 `http://100.x.y.z:8000/v1/...` 호출
@@ -78,7 +82,7 @@ curl http://127.0.0.1:8000/v1/generate \
 인터넷에 포트를 열지 않고, 기기 간 트래픽은 WireGuard로 종단간 암호화됩니다. 공유기 포트포워딩으로 공개하는 것은 권장하지 않습니다(노출 시 반드시 HTTPS 리버스 프록시 + 강한 API 키).
 
 **웹사이트에서 호출할 때**
-- 가장 안전한 구조: 웹사이트의 **백엔드 서버**가 Tailscale로 노트북을 호출 → 결과를 프론트에 전달. API 키가 브라우저에 노출되지 않습니다.
+- 가장 안전한 구조: 웹사이트의 **백엔드 서버**가 노트북을 호출 → 결과를 프론트에 전달 (A 방식). API 키가 브라우저에 노출되지 않습니다.
 - 브라우저 JS에서 직접 호출하려면 `.env` 의 `CORS_ORIGINS` 에 사이트 주소를 추가해야 하며, 이 경우 페이지를 보는 사람이 API 키를 볼 수 있다는 점에 유의하세요(내 기기에서만 쓰는 개인 페이지라면 괜찮음).
 
 ## 4. API
